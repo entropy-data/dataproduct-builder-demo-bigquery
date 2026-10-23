@@ -18,7 +18,7 @@ The trigger phrasing above is illustrative; each `SKILL.md`'s frontmatter `descr
 
 ## Resolving `${PLUGIN_ROOT}`
 
-Skill files reference `${PLUGIN_ROOT}` to locate `templates/`. On Claude Code it is set automatically as `${CLAUDE_PLUGIN_ROOT}`. On Copilot / Codex / Cursor, it is **not** set: resolve it as the directory containing `AGENTS.md` and `skills/`.
+Skill files reference `${PLUGIN_ROOT}` to locate the templates under `skills/dataproduct-bootstrap/templates/`. On Claude Code it is set automatically as `${CLAUDE_PLUGIN_ROOT}`. On Copilot / Codex / Cursor, it is **not** set: resolve it as the directory containing `AGENTS.md` and `skills/`.
 
 ## CLIs the skills shell out to
 

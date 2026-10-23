@@ -1,3 +1,4 @@
+# dataproduct-builder:stub: comments only; dataproduct-implement fills or replaces this file without asking.
 version: 2
 
 # Declare upstream data products you read from as dbt sources. In BigQuery

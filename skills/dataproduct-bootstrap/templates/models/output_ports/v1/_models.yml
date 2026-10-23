@@ -1,3 +1,4 @@
+# dataproduct-builder:stub: comments only; dataproduct-implement fills or replaces this file without asking.
 version: 2
 
 # Published output port tables. One model per output port; the model name

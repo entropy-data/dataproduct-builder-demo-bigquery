@@ -127,7 +127,7 @@ Derive (unless resolved in Step 2):
 
 Templates live under `${PLUGIN_ROOT}/skills/dataproduct-bootstrap/templates/`. Copy each one into the working directory, substituting placeholders.
 
-**Placeholder rule:** substitute only `{{UPPER_SNAKE_CASE}}` tokens (e.g. `{{PROJECT}}`). Leave dbt Jinja such as `{{ env_var('BIGQUERY_KEYFILE') }}` / `{{ config(...) }}` and GitHub Actions expressions such as `${{ secrets.X }}` untouched.
+**Placeholder rule:** substitute only `{{UPPER_SNAKE_CASE}}` tokens (e.g. `{{PROJECT}}`). Values such as `PURPOSE` contain colons, quotes, and dashes, so substitute with a small script (e.g. Python `re.sub(r"\{\{([A-Z_]+)\}\}", …)` over a dict of the values), not `sed`, and check afterwards that no `{{UPPER_SNAKE_CASE}}` token is left (`grep -rE '\{\{[A-Z_]+\}\}'`). Leave dbt Jinja such as `{{ env_var('BIGQUERY_KEYFILE') }}` / `{{ config(...) }}` and GitHub Actions expressions such as `${{ secrets.X }}` untouched.
 
 | Template | Destination |
 |---|---|
