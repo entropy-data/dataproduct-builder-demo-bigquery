@@ -1,0 +1,72 @@
+name: "{{DATA_PRODUCT_NAME}} Data Product"
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * *"
+
+# Repository secrets:
+#   ENTROPY_DATA_API_KEY
+#   GCP_SA_KEY   JSON key of a WRITER service account: dbt creates the datasets {{DATASET}} and
+#                {{INTERNAL_DATASET}} in {{PROJECT}} (BigQuery Job User + BigQuery Data Editor)
+#                and reads the input-port datasets (BigQuery Data Viewer).
+# The same key is reused for `datacontract test`, which only reads (BigQuery Job User, BigQuery Data
+# Viewer, BigQuery Read Session User). With Workload Identity Federation, replace `credentials_json`
+# by `workload_identity_provider` + `service_account`.
+env:
+  API: {{API_HOST}}/api
+  ENTROPY_DATA_HOST: {{API_HOST}}
+  OPENLINEAGE_NAMESPACE: bigquery
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: gcp
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install dbt-core dbt-bigquery openlineage-dbt 'datacontract-cli[bigquery]' entropy-data
+
+      - name: Create project-local profiles.yml
+        run: cp profiles.yml.example profiles.yml
+
+      - name: dbt run
+        run: dbt-ol run --profiles-dir . --target prod
+        env:
+          BIGQUERY_KEYFILE: ${{ steps.gcp.outputs.credentials_file_path }}
+          OPENLINEAGE__TRANSPORT__AUTH__APIKEY: ${{ secrets.ENTROPY_DATA_API_KEY }}
+
+      - name: dbt test
+        run: dbt test --profiles-dir . --target prod
+        env:
+          BIGQUERY_KEYFILE: ${{ steps.gcp.outputs.credentials_file_path }}
+
+      - name: Publish data product
+        run: entropy-data dataproducts put {{DATA_PRODUCT_ID}} --file {{ODPS_FILE}}
+        env:
+          ENTROPY_DATA_API_KEY: ${{ secrets.ENTROPY_DATA_API_KEY }}
+
+      - name: Publish data contract
+        run: entropy-data datacontracts put {{CONTRACT_ID}} --file models/output_ports/v1/{{CONTRACT_FILE}}
+        env:
+          ENTROPY_DATA_API_KEY: ${{ secrets.ENTROPY_DATA_API_KEY }}
+
+      - name: Data contract test
+        run: |
+          datacontract test models/output_ports/v1/{{CONTRACT_FILE}} \
+            --server {{CONTRACT_SERVER}} \
+            --publish $API/test-results
+        env:
+          ENTROPY_DATA_API_KEY: ${{ secrets.ENTROPY_DATA_API_KEY }}
+          DATACONTRACT_BIGQUERY_ACCOUNT_INFO_JSON_PATH: ${{ steps.gcp.outputs.credentials_file_path }}

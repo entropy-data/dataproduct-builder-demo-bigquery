@@ -1,0 +1,13 @@
+{
+  "name": "dataproduct-builder-demo-bigquery",
+  "version": "0.1.0",
+  "description": "Demo-grade builder: scaffold a Google BigQuery dbt data product, implement it, run dbt, run tests, run data contract tests, and publish OpenLineage, all in one go.",
+  "author": {
+    "name": "Entropy Data",
+    "url": "https://entropy-data.com"
+  },
+  "homepage": "https://github.com/entropy-data/dataproduct-builder-demo-bigquery",
+  "repository": "https://github.com/entropy-data/dataproduct-builder-demo-bigquery",
+  "license": "MIT",
+  "keywords": ["dbt", "data-product", "data-contract", "entropy-data", "bigquery", "google-cloud", "demo"]
+}

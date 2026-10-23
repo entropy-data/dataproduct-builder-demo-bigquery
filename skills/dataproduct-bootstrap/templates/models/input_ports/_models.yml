@@ -1,0 +1,18 @@
+version: 2
+
+# Declare upstream data products you read from as dbt sources. In BigQuery
+# an upstream output port lives at <project>.<upstream dataset>.<table>
+# (dbt-bigquery maps a source's `database:` to the GCP project and `schema:` to the dataset).
+# The dataproduct-implement skill writes one file per active access agreement:
+#
+#   models/input_ports/<provider-output-port-id>.source.yaml
+#
+# Example:
+#
+# version: 2
+# sources:
+#   - name: <provider_data_product_id>_<provider_output_port_id>   # snake_case: '-' -> '_'
+#     database: <project>                      # GCP project of the upstream dataset
+#     schema: <upstream dataset>               # e.g. orders_v2
+#     tables:
+#       - name: <table>                        # e.g. orders

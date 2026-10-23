@@ -1,0 +1,34 @@
+# dbt profile for BigQuery. The bootstrap/implement skills copy this file to a
+# project-local `profiles.yml` (gitignored) and run dbt with `--profiles-dir .`.
+# No secrets in this file: credentials come from your gcloud login or a key file path.
+#
+# dbt WRITES (creates the datasets {{DATASET}} and {{INTERNAL_DATASET}} in
+# {{PROJECT}}, and tables / views in them), so the identity behind these credentials
+# needs write rights: BigQuery Job User + BigQuery Data Editor (or bigquery.datasets.create)
+# in {{PROJECT}}, and BigQuery Data Viewer on the input-port datasets.
+# A read-only identity is enough for `datacontract test`, not for dbt.
+#
+#   dev:  Application Default Credentials (`gcloud auth application-default login`)
+#   prod: BIGQUERY_KEYFILE   path to the JSON key of a writer service account (CI)
+{{DBT_NAME}}:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: {{PROJECT}}
+      dataset: {{INTERNAL_DATASET}}   # default dataset; output ports override it per model
+      location: {{LOCATION}}
+      threads: 4
+      job_execution_timeout_seconds: 300
+
+    # Writer service account, used by CI.
+    prod:
+      type: bigquery
+      method: service-account
+      keyfile: "{{ env_var('BIGQUERY_KEYFILE') }}"
+      project: {{PROJECT}}
+      dataset: {{INTERNAL_DATASET}}
+      location: {{LOCATION}}
+      threads: 4
+      job_execution_timeout_seconds: 300

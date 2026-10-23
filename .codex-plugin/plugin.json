@@ -1,0 +1,28 @@
+{
+  "name": "dataproduct-builder-demo-bigquery",
+  "version": "0.1.0",
+  "description": "Demo-grade builder for Google BigQuery dbt data products with Entropy Data.",
+  "author": {
+    "name": "Entropy Data",
+    "url": "https://entropy-data.com"
+  },
+  "homepage": "https://github.com/entropy-data/dataproduct-builder-demo-bigquery",
+  "repository": "https://github.com/entropy-data/dataproduct-builder-demo-bigquery",
+  "license": "MIT",
+  "keywords": ["dbt", "data-product", "data-contract", "entropy-data", "bigquery", "google-cloud", "demo"],
+  "interface": {
+    "displayName": "Data Product Builder for dbt on BigQuery (Demo)",
+    "shortDescription": "Demo builder for BigQuery dbt data products.",
+    "longDescription": "Streamlined demo plugin that scaffolds a Google BigQuery dbt project for a published Entropy Data data product, generates the output-port models from the ODCS contract, runs dbt with OpenLineage, runs dbt and data contract tests, and seeds a GitHub Actions reference workflow. Three skills: dataproduct-bootstrap, dataproduct-implement, and datacontract-test.",
+    "developerName": "Entropy Data",
+    "category": "Data",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://entropy-data.com",
+    "defaultPrompt": [
+      "Bootstrap a BigQuery dbt data product.",
+      "Implement the data product https://app.entropy-data.com/<org>/dataproducts/<id>."
+    ]
+  },
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}

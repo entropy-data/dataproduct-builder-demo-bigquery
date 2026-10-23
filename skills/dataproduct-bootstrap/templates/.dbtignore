@@ -1,0 +1,3 @@
+# ODCS data contracts live next to the models but are not dbt schema files.
+*.odcs.yaml
+*.odcs.yml

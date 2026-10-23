@@ -1,0 +1,21 @@
+{
+  "name": "dataproduct-builder-demo-bigquery",
+  "interface": {
+    "displayName": "Data Product Builder for BigQuery (Demo)",
+    "shortDescription": "Demo plugin for BigQuery dbt data products."
+  },
+  "plugins": [
+    {
+      "name": "dataproduct-builder-demo-bigquery",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/entropy-data/dataproduct-builder-demo-bigquery.git"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Data"
+    }
+  ]
+}

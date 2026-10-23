@@ -1,0 +1,19 @@
+{
+  "name": "dataproduct-builder-demo-bigquery",
+  "owner": {
+    "name": "Entropy Data",
+    "email": "hello@entropy-data.com"
+  },
+  "metadata": {
+    "description": "Demo data product builder for BigQuery.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "dataproduct-builder-demo-bigquery",
+      "description": "Demo-grade builder for Google BigQuery dbt data products with Entropy Data.",
+      "version": "0.1.0",
+      "source": "."
+    }
+  ]
+}

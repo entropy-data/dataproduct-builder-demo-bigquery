@@ -1,0 +1,29 @@
+version: 2
+
+# Published output port tables. One model per output port; the model name
+# (= BigQuery table name) is the contract id without the `_v<N>` suffix,
+# and the model materialises into the dataset of the output port:
+#
+#   -- models/output_ports/v1/{{TABLE}}.sql
+#   {{ config(schema='{{DATASET}}') }}
+#
+# dataproduct-implement fills this file with columns, BigQuery data types
+# (enforced dbt model contract), and tests derived from the ODCS contract.
+# models:
+#   - name: {{TABLE}}
+#     description: {{PURPOSE}}
+#     config:
+#       schema: {{DATASET}}
+#       contract:
+#         enforced: true
+#       meta:
+#         data_contract:
+#           id: {{CONTRACT_ID}}
+#           file: models/output_ports/v1/{{CONTRACT_FILE}}
+#     columns:
+#       - name: id
+#         data_type: string
+#         data_tests: [unique, not_null]
+#       - name: updated_at
+#         data_type: timestamp
+#         data_tests: [not_null]

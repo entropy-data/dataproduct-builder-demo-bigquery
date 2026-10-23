@@ -1,0 +1,8 @@
+.venv/
+target/
+dbt_packages/
+logs/
+.user.yml
+# project-local dbt profile (env_var() references only); profiles.yml.example is checked in
+profiles.yml
+.DS_Store

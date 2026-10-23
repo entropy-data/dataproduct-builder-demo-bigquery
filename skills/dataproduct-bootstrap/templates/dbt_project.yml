@@ -1,0 +1,32 @@
+name: '{{DBT_NAME}}'
+version: '1.0.0'
+
+profile: '{{DBT_NAME}}'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# BigQuery layout (project comes from the profile's `project:`):
+#   staging/ + intermediate/  -> <project>.{{INTERNAL_DATASET}}   (never granted to consumers)
+#   output_ports/v<N>/<t>.sql -> <project>.<output-port dataset>.<t>   (one dataset per output port,
+#                                set per model with {{ config(schema='<dataset>') }})
+# macros/generate_schema_name.sql makes dbt use these dataset names literally.
+models:
+  {{DBT_NAME}}:
+    +materialized: table
+    staging:
+      +materialized: view
+      +schema: '{{INTERNAL_DATASET}}'
+    intermediate:
+      +materialized: view
+      +schema: '{{INTERNAL_DATASET}}'
+    output_ports:
+      +materialized: table

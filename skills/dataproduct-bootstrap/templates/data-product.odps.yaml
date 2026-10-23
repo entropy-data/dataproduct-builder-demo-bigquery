@@ -1,0 +1,42 @@
+# dataproduct-builder:stub: written by dataproduct-bootstrap because the data product was not
+# published on Entropy Data yet. dataproduct-implement replaces this file with the published ODPS.
+apiVersion: "v1.0.0"
+kind: "DataProduct"
+id: "{{DATA_PRODUCT_ID}}"
+name: "{{DATA_PRODUCT_NAME}}"
+status: "draft"
+description:
+  purpose: "{{PURPOSE}}"
+team:
+  name: "{{TEAM_NAME}}"
+outputPorts:
+  - name: "{{OUTPUT_PORT_ID}}"
+    version: "1"
+    type: "bigquery"
+    contractId: "{{CONTRACT_ID}}"
+    customProperties:
+      - property: "project"
+        value: "{{PROJECT}}"
+      - property: "dataset"
+        value: "{{DATASET}}"
+      - property: "location"
+        value: "{{LOCATION}}"
+      - property: "table"
+        value: "{{TABLE}}"
+      - property: "contractServer"
+        value: "{{CONTRACT_SERVER}}"
+      - property: "displayName"
+        value: "{{TABLE}}"
+      - property: "status"
+        value: "draft"
+      - property: "environment"
+        value: "prod"
+customProperties:
+  - property: "icon"
+    value: "bigquery"
+  - property: "type"
+    value: "consumer-aligned"
+  - property: "visibility"
+    value: "internal"
+  - property: "dataProductBuilder"
+    value: "https://github.com/entropy-data/dataproduct-builder-demo-bigquery"

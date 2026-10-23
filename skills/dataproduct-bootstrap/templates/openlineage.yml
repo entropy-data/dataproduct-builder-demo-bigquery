@@ -1,0 +1,10 @@
+# OpenLineage transport for `dbt-ol`. dbt-ol emits BigQuery datasets under the
+# namespace `bigquery` with names `<project>.<dataset>.<table>`; the job namespace
+# comes from OPENLINEAGE_NAMESPACE (e.g. the scheduler that runs dbt).
+# The API key is read from OPENLINEAGE__TRANSPORT__AUTH__APIKEY.
+transport:
+  type: http
+  url: {{API_HOST}}
+  endpoint: api/v1/lineage?dataProductId={{DATA_PRODUCT_ID}}&outputPortId={{OUTPUT_PORT_ID}}
+  auth:
+    type: api_key
