@@ -234,6 +234,8 @@ OPENLINEAGE_NAMESPACE="${OPENLINEAGE_NAMESPACE:-bigquery}" \
 
 `dbt-ol` emits the BigQuery datasets under the namespace `bigquery` with names `<project>.<dataset>.<table>`, and the job under `OPENLINEAGE_NAMESPACE`. The transport in `openlineage.yml` sends the events to Entropy Data authenticated with the API key.
 
+Harmless noise, don't report it as a problem: dbt's `Detected columns with numeric type and unspecified precision/scale` warning for `NUMERIC` columns (the contract type is `NUMERIC`, so keep it), Google's `No project ID could be determined` warning, and dbt's upgrade banner.
+
 Capture stdout and exit code. Non-zero means at least one model failed; surface the dbt log section, do not retry silently. Common BigQuery failures:
 
 - `User does not have bigquery.jobs.create permission`: the identity lacks BigQuery Job User in `<PROJECT>`, or the Application Default Credentials belong to another Google account than expected (see the `dbt debug` check in Step 0).
@@ -242,6 +244,14 @@ Capture stdout and exit code. Non-zero means at least one model failed; surface 
 - `Reauthentication is needed` / `invalid_grant`: the gcloud login expired; run `gcloud auth application-default login`.
 
 If `dbt-ol run` failed, skip Steps 8 and 9 (they would only fail for the same reason, and a published red test result would blame the data), do Step 10 with the `dataProductBuilder` stamp only, and report Steps 8 and 9 as `skipped`.
+
+**Empty output check.** A successful run can still produce an empty table, and an empty table passes every `not_null`, `unique`, and quality test. After a successful run, count the rows of each output-port model:
+
+```bash
+uvx --python 3.12 --from dbt-core --with dbt-bigquery dbt show --profiles-dir . --target <TARGET> --inline "select count(*) as n from {{ ref('<model-name>') }}"
+```
+
+If an output port has 0 rows, treat it as a failure for Step 10 (no `status: active`, no `aiExamples`), and say in the report which filter or threshold removed the rows: count the rows of the intermediate model, and for a minimum-size rule (`having count(*) >= N`) show the largest group, so the user can tell whether the logic or the data volume is wrong. Steps 8 and 9 still run.
 
 If `dbt-ol run` succeeded, **the data product is now visible with materialised tables AND a lineage event in Entropy Data.** Tell the user this explicitly in the final report: it is the whole point of the demo.
 
@@ -272,7 +282,7 @@ One `get` → edit → diff → `put`, preserving everything else:
 1. `mkdir -p target && entropy-data dataproducts get <DATA_PRODUCT_ID> -o yaml > target/<DATA_PRODUCT_ID>.published.odps.yaml`, and copy it to `target/<DATA_PRODUCT_ID>.odps.yaml` (`target/` is gitignored).
 2. Edit only these keys in the copy (with `yq -i`), leaving every other key, list entry, and order untouched:
    - **Always:** the top-level `customProperties` entry `dataProductBuilder` = `https://github.com/entropy-data/dataproduct-builder-demo-bigquery` (add if missing).
-   - **Only if `dbt-ol run` and `datacontract test` passed for the port**, for each implemented output port (matched by `.id // .name`), in its `customProperties`:
+   - **Only if `dbt-ol run` and `datacontract test` passed for the port, and the port's table is not empty**, for each implemented output port (matched by `.id // .name`), in its `customProperties`:
      - `displayName`: set it if missing or empty (the contract's `name`, else `DATA_PRODUCT_NAME`); keep an existing value.
      - `status` = `active`.
    - **Only on success:** the top-level `customProperties` entry `aiExamples`. If it is missing, says the product is not implemented yet, or doesn't reference the real table, set it to one realistic question plus SQL against the fully qualified table, using only contract columns, in the existing style, e.g. `Q: Average score per federal state` + newline + ``SELECT federal_state, sum(avg_score_value * persons) / sum(persons) AS avg_score FROM `<PROJECT>.<DATASET>.<TABLE>` GROUP BY federal_state``. If it already queries `<PROJECT>.<DATASET>.<TABLE>` (or `<DATASET>.<TABLE>`) with existing columns, keep it.
@@ -298,6 +308,7 @@ End with this two-part recap. Use the `Status` enum: `created`, `updated`, `alre
 | `_models.yml` entries + singular tests | … | counts, contract enforced |
 | `dbt parse` | … | passed / failed: `<reason>` |
 | `dbt-ol run` | … | "passed: N models materialised, lineage shipped to `<API_HOST>`" / "failed" / "skipped" |
+| Output rows | … | rows per output port, "failed: empty" when 0 |
 | `dbt test` | … | "passed: N tests" / "failed: N of M" / "skipped" |
 | `datacontract test` | … | per contract: "passed" / "failed: <count>" / "skipped" |
 | Data product on Entropy Data | … | `dataProductBuilder`, output port `displayName` / `status: active`, `aiExamples`: "updated" / "already present" / "skipped (tests failed)" |
