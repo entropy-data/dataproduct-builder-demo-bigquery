@@ -71,7 +71,7 @@ Then proceed.
 
 - Confirm the working directory is empty, or contains only files the user is fine with (e.g. an empty git repo, a `LICENSE`, or a placeholder `README.md` that will be overwritten).
 - If `dbt_project.yml` already exists, stop and tell the user this demo skill only handles greenfield directories. Point them at `dataproduct-implement` to add models to an existing project.
-- Confirm `entropy-data connection test` succeeds and resolve `API_HOST` = `entropy-data connection get -o json | jq -r .host` (no trailing `/`). If the CLI is not connected, stop and tell the user to run `entropy-data connection add <name> --host <host> --api-key <key>` first. The demo does not run without a working connection.
+- Confirm `entropy-data connection test` succeeds and resolve `API_HOST` = `${ENTROPY_DATA_HOST}` if set (it overrides the stored connection, like `ENTROPY_DATA_API_KEY`), else `entropy-data connection get -o json | jq -r .host` (no trailing `/`). If the CLI is not connected, stop and tell the user to run `entropy-data connection add <name> --host <host> --api-key <key>` first. The demo does not run without a working connection.
 
 Always use the `entropy-data` CLI for any connection to Entropy Data. Do not use the Entropy Data MCP server.
 
@@ -146,7 +146,7 @@ Templates live under `${PLUGIN_ROOT}/skills/dataproduct-bootstrap/templates/`. C
 | `models/output_ports/v1/contract.odcs.yaml` | `<CONTRACT_PATH>`, **only if not published.** If `PUBLISHED_CONTRACT` exists, write it verbatim instead: `entropy-data datacontracts get <CONTRACT_ID> -o yaml > <CONTRACT_PATH>` (no stub that `dataproduct-implement` would have to overwrite) |
 | `.github/workflows/data-product.yml` | `.github/workflows/data-product.yml` |
 
-Also create empty `analyses/`, `seeds/`, `snapshots/`, `tests/` directories with a `.gitkeep` each (`macros/` already has the schema macro).
+Create each destination directory first (`mkdir -p`), including `models/output_ports/v1/` before the `datacontracts get … >` redirect. Also create empty `analyses/`, `seeds/`, `snapshots/`, `tests/` directories with a `.gitkeep` each (`macros/` already has the schema macro).
 
 The stub templates start with a `# dataproduct-builder:stub` comment. Keep it in stub files (`dataproduct-implement` replaces marked files without asking) and never add it to files written from Entropy Data.
 

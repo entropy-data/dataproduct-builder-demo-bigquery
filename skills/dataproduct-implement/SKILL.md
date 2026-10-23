@@ -59,7 +59,7 @@ Then proceed.
   - `uv tool run --from 'datacontract-cli[bigquery]' datacontract --version`
 
   If one fails, surface the error and the install line (`curl -LsSf https://astral.sh/uv/install.sh | sh`, `uv tool install entropy-data`) and stop.
-- Confirm `entropy-data connection test` succeeds. If not, stop and tell the user to run `entropy-data connection add <name> --host <host> --api-key <key>`. `API_HOST` = `entropy-data connection get -o json | jq -r .host`.
+- Confirm `entropy-data connection test` succeeds. If not, stop and tell the user to run `entropy-data connection add <name> --host <host> --api-key <key>`. `API_HOST` = `${ENTROPY_DATA_HOST}` if set (it overrides the stored connection, like `ENTROPY_DATA_API_KEY`), else `entropy-data connection get -o json | jq -r .host`.
 - **dbt profile.** If `profiles.yml` is missing in the project root, write it: copy `profiles.yml.example`, or, if that is missing too, the bootstrap template `profiles.yml.example` with `{{DBT_NAME}}`, `{{PROJECT}}`, `{{LOCATION}}`, `{{INTERNAL_DATASET}}`, `{{DATASET}}` substituted (from the output-port contract's BigQuery server; write the file once Step 2 resolved them). It holds no secrets and must be gitignored (add `profiles.yml` to `.gitignore` if missing). `TARGET` = `yq ".${DBT_NAME}.target" profiles.yml` unless the user names one or the credentials below select one. If `yq ".${DBT_NAME}.outputs.${TARGET}.type" profiles.yml` is not `bigquery`, stop and point the user at https://github.com/entropy-data/dataproduct-builder-demo (Snowflake), https://github.com/entropy-data/dataproduct-builder-demo-databricks (Databricks), or https://github.com/entropy-data/dataproduct-builder-dbt. If the file contains an inline key (`keyfile_json`, `private_key`) instead of a key file path, tell the user to move it out.
 - **Resolve runtime credentials once, never print them.** Do not echo, log, or persist API keys, tokens, or key file contents; pass them only as inline env vars of the command that needs them, through `$(...)` / `${VAR}` expansions so the values never appear in the transcript.
   - **Entropy Data API key**: `${ENTROPY_DATA_API_KEY}` if set, else `$(entropy-data connection get --show-api-key -o json | jq -r .api_key)` (the JSON field is `api_key`; without `--show-api-key` it is masked).
@@ -68,6 +68,7 @@ Then proceed.
     2. Application Default Credentials: `gcloud auth application-default print-access-token >/dev/null` succeeds → target `dev` (`method: oauth`).
 
     If neither works, stop and tell the user to run `gcloud auth application-default login` (or set `BIGQUERY_KEYFILE`).
+  - **Prove the credentials can run queries** once the profile exists: `dbt debug --profiles-dir . --target <TARGET>` (with `BIGQUERY_KEYFILE` for `prod`). It connects and runs a test query, so it catches a missing BigQuery Job User role now instead of at Step 7. A token alone proves nothing: Application Default Credentials are a separate login from `gcloud auth login` and can belong to another Google account. If `dbt debug` fails with `bigquery.jobs.create`, stop and tell the user to run `gcloud auth application-default login` with the account that has access to `<PROJECT>` (and `gcloud auth application-default set-quota-project <PROJECT>` if Google warns about a missing quota project). Do not inspect tokens or switch accounts yourself.
   - **`datacontract test` only reads** (BigQuery Job User, BigQuery Data Viewer on the output-port dataset, and BigQuery Read Session User: the CLI reads through the Storage Read API), so a read-only service account is fine: `$DATACONTRACT_BIGQUERY_ACCOUNT_INFO_JSON_PATH` if set, else `$BIGQUERY_KEYFILE`, else Application Default Credentials (leave the variable unset).
 
 ### Step 1: Resolve the data product
@@ -187,7 +188,7 @@ For each contract:
           tables:
             - name: <upstream table>          # e.g. orders
               description: <from contract>
-              columns:
+              columns:                        # only the columns the transformation reads (data minimisation)
                 - name: <col>
                   description: <from contract>
                   data_type: <BQ_TYPE per the type rule in Step 3>
@@ -235,9 +236,12 @@ OPENLINEAGE_NAMESPACE="${OPENLINEAGE_NAMESPACE:-bigquery}" \
 
 Capture stdout and exit code. Non-zero means at least one model failed; surface the dbt log section, do not retry silently. Common BigQuery failures:
 
+- `User does not have bigquery.jobs.create permission`: the identity lacks BigQuery Job User in `<PROJECT>`, or the Application Default Credentials belong to another Google account than expected (see the `dbt debug` check in Step 0).
 - `Access Denied: ... bigquery.datasets.create` or `bigquery.tables.create`: the identity is read-only. dbt needs a writer (BigQuery Data Editor in `<PROJECT>`), or an admin pre-creates `<DATASET>` and `<INTERNAL_DATASET>` in `<LOCATION>` and grants BigQuery Data Editor on them.
 - `Not found: Dataset <project>:<dataset> was not found in location <X>`: the input datasets are in another location than the profile's `location`.
 - `Reauthentication is needed` / `invalid_grant`: the gcloud login expired; run `gcloud auth application-default login`.
+
+If `dbt-ol run` failed, skip Steps 8 and 9 (they would only fail for the same reason, and a published red test result would blame the data), do Step 10 with the `dataProductBuilder` stamp only, and report Steps 8 and 9 as `skipped`.
 
 If `dbt-ol run` succeeded, **the data product is now visible with materialised tables AND a lineage event in Entropy Data.** Tell the user this explicitly in the final report: it is the whole point of the demo.
 

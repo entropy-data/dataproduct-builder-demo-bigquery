@@ -5,7 +5,7 @@ version: 2
 # and the model materialises into the dataset of the output port:
 #
 #   -- models/output_ports/v1/{{TABLE}}.sql
-#   {{ config(schema='{{DATASET}}') }}
+#   config(schema='{{DATASET}}')   (inside dbt's double curly braces)
 #
 # dataproduct-implement fills this file with columns, BigQuery data types
 # (enforced dbt model contract), and tests derived from the ODCS contract.
